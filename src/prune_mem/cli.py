@@ -59,6 +59,21 @@ def decision_to_dict(decision: object) -> dict:
     return asdict(decision)
 
 
+def normalize_global_root_arg(argv: list[str]) -> list[str]:
+    if "--root" not in argv:
+        return argv
+
+    root_index = argv.index("--root")
+    if root_index == 0:
+        return argv
+    if root_index + 1 >= len(argv):
+        return argv
+
+    root_value = argv[root_index + 1]
+    remainder = argv[:root_index] + argv[root_index + 2 :]
+    return ["--root", root_value, *remainder]
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Pruning-first assistant memory")
     parser.add_argument("--root", default=".", help="Project root")
@@ -608,7 +623,7 @@ def run_import(root: str, input_path: str, emit: bool = False) -> int:
 
 def main() -> int:
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(normalize_global_root_arg(os.sys.argv[1:]))
     root = str(Path(args.root).resolve())
     engine = PruneMemEngine(root)
 
